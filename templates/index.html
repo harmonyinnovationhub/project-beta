@@ -5,15 +5,33 @@
     <title>Title</title>
 </head>
 <body>
-{{data}}
+
+<ul>
+    
+    {% for cdata in data %}
+    <li>{{cdata}}</li>
+
+    {% endfor %}
+</ul>
 </body>
 </html>
 
-<!-- use flask;
-create table users(
-   users_id INT NOT NULL AUTO_INCREMENT,
-   users_name VARCHAR(100) NOT NULL,
-   users_email VARCHAR(40) NOT NULL,
+
+
+CREATE DATABASE internship;
+CREATE TABLE interns(
+   interns_id INT NOT NULL,
+   interns_name VARCHAR(100) NOT NULL,
+   interns_language VARCHAR(40) NOT NULL,
+   interns_team VARCHAR(40) NOT NULL,
    submission_date DATE,
-   PRIMARY KEY ( users_id )
-); -->
+   PRIMARY KEY (interns_id)
+);
+
+INSERT INTO interns(interns_name, interns_language, interns_team) VALUES ('isaiah', 'Python', 'Beta');
+INSERT INTO interns(interns_name, interns_language, interns_team) VALUES ('Nathaniel', 'Dart', 'Beta');
+INSERT INTO interns(interns_name, interns_language, interns_team) VALUES ('Adul', 'PHP', 'Alpha');
+INSERT INTO interns(interns_name, interns_language, interns_team) VALUES ('Muyiwa', 'Js', 'Alpha');
+INSERT INTO interns(interns_name, interns_language, interns_team) VALUES ('Muyida', 'Js', 'Delta');
+INSERT INTO interns(interns_name, interns_language, interns_team) VALUES ('Tafehq', 'Js', 'Delta');
+INSERT INTO interns(interns_name, interns_language, interns_team) VALUES ('Emmanuel', 'Js', 'Charlie');
