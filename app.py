@@ -1,13 +1,11 @@
-from enum import unique
-from flask import Flask, render_template, request
-from flask_mysqldb import MySQL
-from flask_bootstrap import Bootstrap
-from flask_wtf import FlaskForm
-from sqlalchemy.sql.functions import user
-from wtforms import StringField, PasswordField, BooleanField, validators
-from wtforms.validators import InputRequired, Email, Length
+
+from os import name
+from flask import Flask, jsonify, json, request, make_response
+import uuid
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import create_engine
+import jwt
+
 
 
 
@@ -16,65 +14,42 @@ app.config['SECRET_KEY'] = 'Thisissupposedtobesecret!'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://beta:password@localhost/beta'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-bootstrap = Bootstrap(app)
-
-# class User(db.Model):
-#     id = db.Column(db.Integer, primary_key = True)
-#     full_name = db.Column(db.String(50))
-#     username = db.Column(db.String(15), unique=True)
-#     email = db.Column(db.String(50), unique=True)
-#     pass_w = db.Column(db.String(50))
-    
 
 
-#     def __init__(self, username, email):
-#         self.username = username
-#         self.email = email
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(50), unique=True)
+    name = db.Column(db.String(50))
+    password = db.Column(db.String(128))
+    admin = db.Column(db.Boolean)
 
-    
-class LoginForm(FlaskForm):
-    username = StringField('username', validators=[InputRequired(), Length(min=4, max=15)])
-    password = PasswordField('password', validators=[InputRequired()])
+@app.route('/register', methods=['POST', "GET"])
+def create_user():
+    data = json.loads(request.data, strict=False) 
+    hashed_password = generate_password_hash(data['password'], method='sha256')
+    new_user = User(token=str(uuid.uuid4()), name=data['name'], password=hashed_password)
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify({"message": "New User Created"})
 
-class RegisterForm(FlaskForm):
-    full_name = StringField('Fullname', [validators.DataRequired(), validators.Length(min=3, max=35)]) 
-    email = StringField('email', [validators.DataRequired(), validators.Length(min=3, max=35)])
-    username = StringField('username',[validators.DataRequired(), validators.Length(min=3, max=35)])
-    pass_w = PasswordField('password', [validators.DataRequired(), validators.Length(min=3, max=35)])
-
-
-
-@app.route("/login", methods=['GET', 'POST'])
+@app.route('/login', methods=['POST'])
 def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        return '<h1>' + form.username.data + ' ' + form.password.data + '</h1>'
-   
-    return render_template('login.html', form=form)
+    auth = request.authorization
 
-@app.route("/register", methods=['GET', 'POST'])
-def register():
-    form = RegisterForm(request.form)
-    if request.method == 'POST' and form.validate():
-        new_user= User( email=form.email.data, username=form.username.data, pass_w=form.pass_w.data)
-        db.session.add(new_user)
-        db.session.commit()
-        return '<h1> New user has been created </h1>'
-    
-    return  render_template('register.html', form=form)
+    if not auth or not auth.username or not auth.password:
+        return make_response('Could not verify', 401, {'WWW-Authenticate' : 'Basic realm="Login required!"'})
 
-# @app.route('/form', methods=['GET', 'POST'])
-# def index():
-#     if request.method == "POST":
-#         details = request.form
-#         firstName = details['users_name']
-#         lastName = details['users_email']
-#         cur = mysql.connection.cursor()
-#         cur.execute("INSERT INTO users(users_name, users_email) VALUES (%s, %s)", (firstName, lastName))
-#         mysql.connection.commit()
-#         cur.close()
-#         return 'success'
-#     return render_template('form.html')
+    user = User.query.filter_by(name=auth.username).first()
+
+    if not user:
+        return make_response('Could not verify', 401, {'WWW-Authenticate' : 'Basic realm="Login required!"'})
+
+    if check_password_hash(user.password, auth.password):
+        token = jwt.encode({'token' : user.token}, app.config['SECRET_KEY'])
+
+        return jsonify({'token' : token})
+
+    return make_response('Could not verify', 401, {'WWW-Authenticate' : 'Basic realm="Login required!"'})
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port="5001", debug = True)
