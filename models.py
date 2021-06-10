@@ -3,6 +3,9 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy(app)
 
+# user table
+
+
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     token = db.Column(db.String(50), unique=True)
