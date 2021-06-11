@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
 
 from core import app
-from models import db, User
+from models import db, User, LogLag
 
 # creating new users
 @app.route('/register', methods=['POST', "GET"])
@@ -37,3 +37,19 @@ def login():
         return jsonify({'token': token})
 
     return make_response('Could not verify', 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
+
+
+@app.route('/submit', methods=['POST'])
+def submit():
+    data = json.loads(request.data, strict=False)
+    new_loglat = LogLag(logitude=data['logitude'], latitude=data['latitude'])
+    db.session.add(new_loglat)
+    db.session.commit()
+    return jsonify({"message": "Logititude and Latitude submitted successfully"})
+    
+@app.route('/retrieve', methods=['GET'])
+def getLogLat():
+    data = json.loads(request.data, strict=False)
+    resultt = LogLag.query.all()
+    #jj = resultt.dump(LogLag.query.all())
+    return jsonify( resultt)
