@@ -49,7 +49,17 @@ def submit():
     
 @app.route('/retrieve', methods=['GET'])
 def getLogLat():
+    location = []
     data = json.loads(request.data, strict=False)
-    resultt = LogLag.query.all()
-    #jj = resultt.dump(LogLag.query.all())
-    return jsonify( resultt)
+    resultt = LogLag.query.filter_by(logitude=data['logitude'], latitude=data['latitude'])
+    for log in resultt:
+        logi = log.logitude
+        lati = log.latitude
+        result = {
+            "Requested logitude" : logi,
+            "Requested latitude ": lati
+        }
+        location.append(result)
+    return jsonify( location)
+    
+    
