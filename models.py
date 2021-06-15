@@ -24,3 +24,8 @@ class LogLag(db.Model):
         self.logitude = logitude
         self.latitude = latitude
 
+class Upload(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    file = db.Column(db.Text, nullable=False)
+    name = db.Column(db.Text, nullable=False)
+    mimetype = db.Column(db.Text, nullable=False)
